@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { LandPlot, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,12 +13,11 @@ import { getErrorMessage } from '@/store/api/baseApi';
 import { useBookingsPrefetch, useGetBookingsQuery } from '@/store/api/bookingsApi';
 import { useGetCourtsQuery } from '@/store/api/courtsApi';
 import { useAppSelector } from '@/store/hooks';
-import type { BookingDTO } from '@/types';
 import { BookingDetailSheet } from './BookingDetailSheet';
-import { BookingFormDialog, type BookingPrefill } from './BookingFormDialog';
 import { CalendarHeader } from './CalendarHeader';
 import type { SlotClick } from './DayColumn';
 import { WeekCalendar } from './WeekCalendar';
+import { prefillToSearchParams } from './form/booking-form-utils';
 
 export function BookingsView() {
   const { weekStart, courtFilter, showCancelled } = useAppSelector((s) => s.calendar);
@@ -34,19 +34,15 @@ export function BookingsView() {
   const { data: bookings = [], isLoading, isFetching, isError, error, refetch } = useGetBookingsQuery(query);
   const prefetch = useBookingsPrefetch('getBookings');
 
-  const [formOpen, setFormOpen] = useState(false);
-  const [prefill, setPrefill] = useState<BookingPrefill | undefined>();
-  const [editing, setEditing] = useState<BookingDTO | null>(null);
+  const router = useRouter();
   const [detailId, setDetailId] = useState<string | null>(null);
 
-  function openCreate(p?: BookingPrefill) {
-    setEditing(null);
-    setPrefill(p);
-    setFormOpen(true);
-  }
+  const createHref = `/bookings/new${prefillToSearchParams(court !== 'all' ? { courtId: court } : undefined)}`;
 
   function handleSlotClick(slot: SlotClick) {
-    openCreate({ courtId: slot.courtId, date: slot.date, startTime: slot.startTime });
+    router.push(
+      `/bookings/new${prefillToSearchParams({ courtId: slot.courtId, date: slot.date, startTime: slot.startTime })}`,
+    );
   }
 
   return (
@@ -55,9 +51,17 @@ export function BookingsView() {
         title="Bookings"
         description="Weekly calendar for all courts. Click an empty slot to book it."
         actions={
-          <Button onClick={() => openCreate(court !== 'all' ? { courtId: court } : undefined)} disabled={!activeCourts.length}>
-            <Plus /> Create Booking
-          </Button>
+          activeCourts.length ? (
+            <Button asChild>
+              <Link href={createHref}>
+                <Plus /> Create Booking
+              </Link>
+            </Button>
+          ) : (
+            <Button disabled>
+              <Plus /> Create Booking
+            </Button>
+          )
         }
       />
 
@@ -94,21 +98,7 @@ export function BookingsView() {
         />
       )}
 
-      <BookingFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        booking={editing}
-        prefill={prefill}
-      />
-      <BookingDetailSheet
-        bookingId={detailId}
-        onOpenChange={(o) => !o && setDetailId(null)}
-        onEdit={(b) => {
-          setEditing(b);
-          setPrefill(undefined);
-          setFormOpen(true);
-        }}
-      />
+      <BookingDetailSheet bookingId={detailId} onOpenChange={(o) => !o && setDetailId(null)} />
     </>
   );
 }

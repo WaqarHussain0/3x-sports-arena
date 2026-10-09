@@ -2,16 +2,24 @@ import { Types } from 'mongoose';
 import { ExpenseCategory } from '@/models/ExpenseCategory';
 import { Expense } from '@/models/Expense';
 import { conflict, notFound } from '@/lib/api';
+import { EXPENSE_CATEGORIES_PAGE_SIZE } from '@/lib/constants';
 import { currentMonthPkt, lastDayOfMonth, pktDayRange } from '@/lib/time';
+import { escapeRegex } from '@/lib/url';
 import type { CategoryInput } from '@/lib/validators';
-import type { ExpenseCategoryDetailDTO, ExpenseCategoryDTO } from '@/types';
+import type { ExpenseCategoryDetailDTO, ExpenseCategoryDTO, ExpenseCategoryListResult } from '@/types';
 
-async function aggregateCategories(match: Record<string, unknown>): Promise<ExpenseCategoryDetailDTO[]> {
+async function aggregateCategories(
+  match: Record<string, unknown>,
+  paging?: { skip: number; limit: number },
+): Promise<ExpenseCategoryDetailDTO[]> {
   const month = currentMonthPkt();
   const { from, to } = pktDayRange(`${month}-01`, lastDayOfMonth(month));
 
   return ExpenseCategory.aggregate<ExpenseCategoryDetailDTO>([
     { $match: match },
+    // Sort/page before the per-category expense lookup so stats are only computed for the rows returned.
+    { $sort: { nameLower: 1, name: 1 } },
+    ...(paging ? [{ $skip: paging.skip }, { $limit: paging.limit }] : []),
     {
       $lookup: {
         from: Expense.collection.name,
@@ -44,12 +52,49 @@ async function aggregateCategories(match: Record<string, unknown>): Promise<Expe
       },
     },
     { $project: { stats: 0, nameLower: 0, __v: 0 } },
-    { $sort: { nameLower: 1, name: 1 } },
   ]);
 }
 
 export async function listCategories(includeArchived: boolean): Promise<ExpenseCategoryDTO[]> {
   return aggregateCategories(includeArchived ? {} : { isArchived: false });
+}
+
+export interface CategoryPageFilters {
+  search?: string;
+  includeArchived: boolean;
+  page: number;
+}
+
+/** Plain, serializable DTO (safe to pass from a Server Component to a Client Component). */
+function toCategoryDTO(c: ExpenseCategoryDTO): ExpenseCategoryDTO {
+  return {
+    _id: String(c._id),
+    name: c.name,
+    description: c.description || undefined,
+    sportType: c.sportType,
+    isArchived: c.isArchived,
+    expenseCount: c.expenseCount,
+    totalSpent: c.totalSpent,
+    createdAt: new Date(c.createdAt).toISOString(),
+    updatedAt: new Date(c.updatedAt).toISOString(),
+  };
+}
+
+/** One page of categories (name search, optional archived), for the server-rendered list page. */
+export async function listCategoriesPage(filters: CategoryPageFilters): Promise<ExpenseCategoryListResult> {
+  const page = Math.max(1, filters.page);
+  const limit = EXPENSE_CATEGORIES_PAGE_SIZE;
+  const term = filters.search?.trim().toLowerCase();
+  const match: Record<string, unknown> = {
+    ...(filters.includeArchived ? {} : { isArchived: false }),
+    ...(term ? { nameLower: new RegExp(escapeRegex(term)) } : {}),
+  };
+
+  const [items, total] = await Promise.all([
+    aggregateCategories(match, { skip: (page - 1) * limit, limit }),
+    ExpenseCategory.countDocuments(match),
+  ]);
+  return { items: items.map(toCategoryDTO), page, limit, total };
 }
 
 export async function getCategory(id: string): Promise<ExpenseCategoryDetailDTO> {

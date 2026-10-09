@@ -15,14 +15,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ErrorState } from '@/components/shared/EmptyState';
 import { BookingDetailSheet } from '@/components/bookings/BookingDetailSheet';
-import { BookingFormDialog } from '@/components/bookings/BookingFormDialog';
 import { formatCurrency, formatNumber } from '@/lib/format';
 import { todayPkt } from '@/lib/time';
 import { getErrorMessage } from '@/store/api/baseApi';
 import { useGetDashboardStatsQuery } from '@/store/api/dashboardApi';
 import { useAppSelector } from '@/store/hooks';
 import { selectDashboardQuery } from '@/store/slices/dashboardSlice';
-import type { BookingDTO } from '@/types';
 import {
   BookingsByWeekdayChart,
   ExpensesByCategoryChart,
@@ -43,7 +41,6 @@ export function DashboardView() {
   const { data: stats, isLoading, isFetching, isError, error, refetch } = useGetDashboardStatsQuery(query);
 
   const [detailId, setDetailId] = useState<string | null>(null);
-  const [editing, setEditing] = useState<BookingDTO | null>(null);
 
   const k = stats?.kpis;
   const p = stats?.previousKpis;
@@ -128,8 +125,7 @@ export function DashboardView() {
         </div>
       )}
 
-      <BookingDetailSheet bookingId={detailId} onOpenChange={(o) => !o && setDetailId(null)} onEdit={setEditing} />
-      <BookingFormDialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)} booking={editing} />
+      <BookingDetailSheet bookingId={detailId} onOpenChange={(o) => !o && setDetailId(null)} />
     </>
   );
 }

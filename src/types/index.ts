@@ -52,6 +52,13 @@ export interface CourtDTO {
   updatedAt: string;
 }
 
+export interface CourtListResult {
+  items: CourtDTO[];
+  page: number;
+  limit: number;
+  total: number;
+}
+
 export interface CourtPayload {
   name: string;
   pricePerHour: number;
@@ -71,6 +78,13 @@ export interface ExpenseCategoryDTO {
   totalSpent: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ExpenseCategoryListResult {
+  items: ExpenseCategoryDTO[];
+  page: number;
+  limit: number;
+  total: number;
 }
 
 export interface ExpenseCategoryDetailDTO extends ExpenseCategoryDTO {
@@ -134,6 +148,19 @@ export interface CustomerDTO {
   totalSpent: number;
   firstBookingAt?: string;
   lastBookingAt?: string;
+}
+
+export interface CustomerPayload {
+  name: string;
+  phone: string;
+  email?: string;
+}
+
+export interface CustomerListResult {
+  items: CustomerDTO[];
+  page: number;
+  limit: number;
+  total: number;
 }
 
 // Bookings

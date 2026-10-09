@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
 import { skipToken } from '@reduxjs/toolkit/query/react';
 import { Ban, Banknote, Pencil, Phone } from 'lucide-react';
@@ -16,7 +17,7 @@ import { formatPhone } from '@/lib/phone';
 import { cn } from '@/lib/utils';
 import { getErrorMessage } from '@/store/api/baseApi';
 import { useGetBookingQuery } from '@/store/api/bookingsApi';
-import type { BookingDTO, UserRef } from '@/types';
+import type { UserRef } from '@/types';
 import { CancelBookingDialog } from './CancelBookingDialog';
 import { RecordPaymentDialog } from './RecordPaymentDialog';
 
@@ -45,11 +46,9 @@ function Row({ label: l, children, className }: { label: string; children: React
 export function BookingDetailSheet({
   bookingId,
   onOpenChange,
-  onEdit,
 }: {
   bookingId: string | null;
   onOpenChange: (open: boolean) => void;
-  onEdit: (booking: BookingDTO) => void;
 }) {
   const { data: booking, isLoading, isError, error, refetch } = useGetBookingQuery(bookingId ?? skipToken);
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -198,8 +197,10 @@ export function BookingDetailSheet({
 
         {shown && shown.status !== 'cancelled' && (
           <SheetFooter className="flex-row flex-wrap border-t">
-            <Button variant="outline" className="flex-1" onClick={() => onEdit(shown)}>
-              <Pencil /> Edit
+            <Button variant="outline" className="flex-1" asChild>
+              <Link href={`/bookings/${shown._id}/edit`}>
+                <Pencil /> Edit
+              </Link>
             </Button>
             {shown.remainingAmount > 0 && (
               <Button className="flex-1" onClick={() => setPaymentOpen(true)}>

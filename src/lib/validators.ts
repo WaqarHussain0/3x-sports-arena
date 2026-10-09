@@ -207,6 +207,30 @@ export function validateExpenseInput(raw: unknown, partial = false): Validated<P
   return done(errors, data);
 }
 
+// Customers
+
+export interface CustomerInput {
+  name: string;
+  phone: string; // normalized
+  email?: string;
+}
+
+export function validateCustomerInput(raw: unknown): Validated<CustomerInput> {
+  const b = asBody(raw);
+  const errors: FieldErrors = {};
+
+  const name = typeof b.name === 'string' ? b.name.trim() : '';
+  if (!lengthBetween(name, 2, 60)) errors.name = 'Name must be 2–60 characters';
+
+  const phone = normalizePhone(typeof b.phone === 'string' ? b.phone : '');
+  if (!phone) errors.phone = 'Enter a valid Pakistani mobile number (03XXXXXXXXX)';
+
+  const email = optionalTrimmed(b.email)?.toLowerCase();
+  if (email && !isValidEmail(email)) errors.email = 'Enter a valid email address';
+
+  return done(errors, { name, phone: phone ?? '', email });
+}
+
 // Bookings
 
 export interface BookingInput {

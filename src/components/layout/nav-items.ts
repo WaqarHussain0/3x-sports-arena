@@ -1,4 +1,4 @@
-import { CalendarDays, LayoutDashboard, LandPlot, Receipt, Tags, type LucideIcon } from 'lucide-react';
+import { CalendarDays, LayoutDashboard, LandPlot, Receipt, Tags, Users, type LucideIcon } from 'lucide-react';
 
 export interface NavItem {
   title: string;
@@ -10,6 +10,7 @@ export const NAV_ITEMS: NavItem[] = [
   { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { title: 'Bookings', href: '/bookings', icon: CalendarDays },
   { title: 'Courts', href: '/courts', icon: LandPlot },
+  { title: 'Customers', href: '/customers', icon: Users },
   { title: 'Expense Categories', href: '/expense-categories', icon: Tags },
   { title: 'Expenses', href: '/expenses', icon: Receipt },
 ];

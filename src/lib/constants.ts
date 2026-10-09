@@ -5,6 +5,9 @@ export const LOCALE = 'en-PK';
 export const TIME_STEP_MINUTES = 15;
 export const MAX_BOOKING_MINUTES = 24 * 60;
 export const EXPENSES_PAGE_SIZE = 20;
+export const CUSTOMERS_PAGE_SIZE = 6;
+export const EXPENSE_CATEGORIES_PAGE_SIZE = 6;
+export const COURTS_PAGE_SIZE = 6;
 export const AVAILABILITY_DEBOUNCE_MS = 400;
 
 export const SPORT_TYPES = ['cricket', 'futsal'] as const; // used by bookings

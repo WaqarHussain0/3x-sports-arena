@@ -1,23 +1,47 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { EXPENSE_SPORT_TYPES, label, type ExpenseSportType } from '@/lib/constants';
-import { applyServerErrors } from '@/lib/form';
-import { categoryDescriptionRules, categoryNameRules } from '@/lib/validators';
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  EXPENSE_SPORT_TYPES,
+  label,
+  type ExpenseSportType,
+} from "@/lib/constants";
+import { applyServerErrors } from "@/lib/form";
+import { categoryDescriptionRules, categoryNameRules } from "@/lib/validators";
 import {
   useCreateExpenseCategoryMutation,
   useUpdateExpenseCategoryMutation,
-} from '@/store/api/expenseCategoriesApi';
-import type { ExpenseCategoryDTO } from '@/types';
+} from "@/store/api/expenseCategoriesApi";
+import type { ExpenseCategoryDTO } from "@/types";
 
 interface CategoryFormValues {
   name: string;
@@ -41,31 +65,39 @@ export function CategoryFormDialog({
   const [updateCategory] = useUpdateExpenseCategoryMutation();
 
   const form = useForm<CategoryFormValues>({
-    mode: 'onTouched',
-    defaultValues: { name: '', sportType: 'general', description: '' },
+    mode: "onTouched",
+    defaultValues: { name: "", sportType: "general", description: "" },
   });
 
   useEffect(() => {
     if (open) {
       form.reset({
-        name: category?.name ?? '',
-        sportType: category?.sportType ?? 'general',
-        description: category?.description ?? '',
+        name: category?.name ?? "",
+        sportType: category?.sportType ?? "general",
+        description: category?.description ?? "",
       });
     }
   }, [open, category, form]);
 
   async function onSubmit(values: CategoryFormValues) {
-    const payload = { name: values.name.trim(), sportType: values.sportType, description: values.description.trim() };
+    const payload = {
+      name: values.name.trim(),
+      sportType: values.sportType,
+      description: values.description.trim(),
+    };
     try {
       const saved = isEdit
         ? await updateCategory({ id: category._id, ...payload }).unwrap()
         : await createCategory(payload).unwrap();
-      toast.success(isEdit ? 'Category updated' : 'Category added');
+
+      toast.success("Request successful", {
+        description: isEdit ? "Category updated" : "Category added",
+      });
+
       onSaved?.(saved);
       onOpenChange(false);
     } catch (error) {
-      applyServerErrors(error, form.setError, { nameLower: 'name' });
+      applyServerErrors(error, form.setError, { nameLower: "name" });
     }
   }
 
@@ -73,8 +105,10 @@ export function CategoryFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Edit category' : 'Add category'}</DialogTitle>
-          <DialogDescription>Group expenses and tag them with the sport they belong to.</DialogDescription>
+          <DialogTitle>{isEdit ? "Edit category" : "Add category"}</DialogTitle>
+          <DialogDescription>
+            Group expenses and tag them with the sport they belong to.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           {/* stopPropagation: this dialog can open inside the expense form without submitting it. */}
@@ -103,7 +137,7 @@ export function CategoryFormDialog({
             <FormField
               control={form.control}
               name="sportType"
-              rules={{ required: 'Sport type is required' }}
+              rules={{ required: "Sport type is required" }}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Sport type</FormLabel>
@@ -132,7 +166,10 @@ export function CategoryFormDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Description <span className="font-normal text-muted-foreground">(optional)</span>
+                    Description{" "}
+                    <span className="font-normal text-muted-foreground">
+                      (optional)
+                    </span>
                   </FormLabel>
                   <FormControl>
                     <Textarea rows={2} {...field} />
@@ -142,12 +179,18 @@ export function CategoryFormDialog({
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting && <Loader2 className="animate-spin" />}
-                {isEdit ? 'Save changes' : 'Add category'}
+                {form.formState.isSubmitting && (
+                  <Loader2 className="animate-spin" />
+                )}
+                {isEdit ? "Save changes" : "Add category"}
               </Button>
             </DialogFooter>
           </form>
